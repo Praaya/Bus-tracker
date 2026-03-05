@@ -33,3 +33,8 @@ Thumbs.db
 
 *.swp
 *.swo
+
+# Project specific ignores
+Gemini.md
+
+dev.sh
