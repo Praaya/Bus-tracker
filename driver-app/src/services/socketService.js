@@ -1,20 +1,20 @@
 import { io } from "socket.io-client";
 
-// Updated to use your Linux IP
-const SOCKET_URL = "http://192.168.31.248:5000"; 
+// This is your LIVE Railway URL
+const SOCKET_URL = "https://bus-tracker-production-c53a.up.railway.app"; 
 
 let socket = null;
 
 export const connectSocket = () => {
   if (!socket) {
-    console.log("Connecting Driver App to:", SOCKET_URL);
+    console.log("Connecting Driver App to LIVE server:", SOCKET_URL);
     socket = io(SOCKET_URL, {
       transports: ["websocket"],
       reconnectionAttempts: 5,
     });
 
     socket.on("connect", () => {
-      console.log("✅ Driver App Connected to Server");
+      console.log("✅ Driver App Connected to LIVE Server");
     });
 
     socket.on("connect_error", (err) => {
