@@ -1,41 +1,46 @@
 import React, { useState } from "react";
-import { View, Text, Button, TextInput, StyleSheet } from "react-native";
+import { View, Text, Button, TextInput, StyleSheet, Alert } from "react-native";
 import {
   startLocationTracking,
   stopLocationTracking,
-} from "../services/locationService";
+} from "../services/locationServices";
+import { connectSocket, disconnectSocket, sendLocation } from "../services/socketService";
 
 export default function DriverScreen() {
   const [busId, setBusId] = useState("");
   const [location, setLocation] = useState(null);
   const [tracking, setTracking] = useState(false);
 
-  const startTrip = () => {
-    if (!busId) {
-      alert("Enter Bus ID");
+  const startTrip = async () => {
+    if (!busId.trim()) {
+      Alert.alert("Error", "Please enter a valid Bus ID");
       return;
     }
 
     setTracking(true);
+    connectSocket();
 
-    startLocationTracking((coords) => {
+    await startLocationTracking((coords) => {
       setLocation(coords);
 
       const payload = {
         busId,
-        lat: coords.latitude,
-        lng: coords.longitude,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
         speed: coords.speed || 0,
         timestamp: Date.now(),
       };
 
-      console.log("PAYLOAD:", payload);
+      console.log("Emitting location:", payload);
+      sendLocation(payload);
     });
   };
 
   const endTrip = () => {
     stopLocationTracking();
+    disconnectSocket();
     setTracking(false);
+    setLocation(null);
   };
 
   return (

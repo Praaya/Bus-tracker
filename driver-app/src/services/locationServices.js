@@ -14,7 +14,7 @@ export const startLocationTracking = async (onUpdate) => {
     {
       accuracy: Location.Accuracy.High,
       timeInterval: 5000,
-      distanceInterval: 10,
+      distanceInterval: 0,
     },
     (loc) => {
       onUpdate(loc.coords);
