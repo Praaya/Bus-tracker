@@ -1,6 +1,7 @@
 const axios = require('axios');
 
-const API_URL = 'http://localhost:5000/api/driver/location';
+// UPDATED TO LIVE RAILWAY URL
+const API_URL = 'https://bus-tracker-production-c53a.up.railway.app/api/driver/location';
 const BUS_ID = 'SIMULATOR-01';
 
 // A simple path of coordinates (Guwahati area)
@@ -35,12 +36,12 @@ const sendUpdate = async () => {
       speed: 40 + Math.random() * 10
     });
     
-    console.log(`[SIMULATOR] Sent: ${BUS_ID} @ ${lat}, ${lng} - Status: ${response.status}`);
+    console.log(`[SIMULATOR] Sent to LIVE: ${BUS_ID} @ ${lat}, ${lng} - Status: ${response.status}`);
     currentIndex++;
   } catch (error) {
     console.error(`[SIMULATOR] Error: ${error.message}`);
   }
 };
 
-console.log("🚀 Starting Bus Simulator...");
+console.log("🚀 Starting LIVE Bus Simulator...");
 setInterval(sendUpdate, 2000);

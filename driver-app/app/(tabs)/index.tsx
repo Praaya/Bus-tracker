@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Button, TextInput, StyleSheet, Alert, Platform } from "react-native";
+import { View, Text, Button, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import {
   startLocationTracking,
   stopLocationTracking,
@@ -7,18 +7,16 @@ import {
 import { connectSocket, disconnectSocket, sendLocation } from "../../src/services/socketService";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useAuth } from "../../src/context/AuthContext";
 
 export default function DriverHomeScreen() {
-  const [busId, setBusId] = useState("");
+  const { user, logout } = useAuth();
   const [location, setLocation] = useState(null);
   const [tracking, setTracking] = useState(false);
 
-  const startTrip = async () => {
-    if (!busId.trim()) {
-      Alert.alert("Error", "Please enter a valid Bus ID");
-      return;
-    }
+  const busId = user?.busId || "Unknown";
 
+  const startTrip = async () => {
     setTracking(true);
     connectSocket();
 
@@ -47,16 +45,14 @@ export default function DriverHomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>Driver Panel</ThemedText>
+      <View style={styles.header}>
+        <ThemedText type="subtitle">Welcome, {user?.name}</ThemedText>
+        <TouchableOpacity onPress={logout}>
+          <ThemedText style={styles.logoutText}>Logout</ThemedText>
+        </TouchableOpacity>
+      </View>
 
-      <TextInput
-        placeholder="Bus ID (e.g., bus_01)"
-        placeholderTextColor="#999"
-        style={styles.input}
-        value={busId}
-        onChangeText={setBusId}
-        editable={!tracking}
-      />
+      <ThemedText type="title" style={styles.title}>Bus: {busId}</ThemedText>
 
       {location && (
         <View style={styles.locationBox}>
@@ -76,7 +72,7 @@ export default function DriverHomeScreen() {
 
       {tracking && (
         <ThemedText style={styles.trackingInfo}>
-          Currently tracking and sending location updates...
+          📡 Live tracking active...
         </ThemedText>
       )}
     </ThemedView>
@@ -86,22 +82,24 @@ export default function DriverHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     padding: 20,
+    justifyContent: "center",
   },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    width: "100%",
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-    fontSize: 16,
-    color: "#000",
-    backgroundColor: "#fff",
+  header: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#F44336',
+    fontWeight: 'bold',
   },
   title: {
+    textAlign: 'center',
     marginBottom: 30,
   },
   locationBox: {
@@ -116,6 +114,7 @@ const styles = StyleSheet.create({
   },
   trackingInfo: {
     marginTop: 20,
+    textAlign: 'center',
     color: "#4CAF50",
     fontWeight: "bold",
   },
