@@ -70,6 +70,10 @@ export default function LoginScreen() {
       >
         <ThemedText style={styles.passengerButtonText}>Continue as Passenger</ThemedText>
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push("/register")} style={{ marginTop: 20 }}>
+        <ThemedText style={{ color: "#3498db", textAlign: "center" }}>Don't have an account? Sign Up</ThemedText>
+      </TouchableOpacity>
     </ThemedView>
   );
 }
