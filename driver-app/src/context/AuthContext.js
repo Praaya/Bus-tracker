@@ -15,7 +15,9 @@ export const AuthProvider = ({ children }) => {
       try {
         const storedUser = await AsyncStorage.getItem("driverInfo");
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+          axios.defaults.headers.common["Authorization"] = `Bearer ${parsedUser.token}`;
         }
       } catch (e) {
         console.error("Failed to load driver info", e);
@@ -30,6 +32,7 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       const data = response.data;
       await AsyncStorage.setItem("driverInfo", JSON.stringify(data));
+      axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
       setUser(data);
       return { success: true };
     } catch (error) {
@@ -42,6 +45,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     await AsyncStorage.removeItem("driverInfo");
+    delete axios.defaults.headers.common["Authorization"];
     setUser(null);
   };
 

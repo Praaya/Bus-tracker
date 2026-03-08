@@ -23,4 +23,14 @@ export const getAllBuses = async () => {
   return response.data;
 };
 
+export const getAllRoutes = async () => {
+  const response = await api.get("/driver/routes");
+  return response.data;
+};
+
+export const deleteBus = async (id) => {
+  const response = await api.delete(`/driver/buses/${id}`);
+  return response.data;
+};
+
 export default api;

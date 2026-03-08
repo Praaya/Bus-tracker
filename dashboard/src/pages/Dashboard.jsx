@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, CircleMarker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Link } from "react-router-dom";
 import { connectSocket, disconnectSocket } from "../services/Socket";
+import { getAllRoutes } from "../services/Api";
 
-// Custom bus icon (obvious and visible)
+// Custom bus icon
 const BusIcon = L.divIcon({
   className: 'bus-marker-icon',
   html: `
@@ -16,19 +18,9 @@ const BusIcon = L.divIcon({
   iconAnchor: [20, 20]
 });
 
-// Forces map update when location changes
-function MapUpdater({ center, autoCenter }) {
-  const map = useMap();
-  useEffect(() => {
-    if (autoCenter && center && center[0] !== 0) {
-      map.flyTo(center, map.getZoom(), { animate: true, duration: 1 });
-    }
-  }, [center, autoCenter, map]);
-  return null;
-}
-
 export default function Dashboard() {
   const [buses, setBuses] = useState({});
+  const [routes, setRoutes] = useState([]);
   const [mapCenter, setMapCenter] = useState([26.152, 91.885]);
   const [autoCenter, setAutoCenter] = useState(true);
   const [debugLog, setDebugLog] = useState(["Connecting..."]);
@@ -39,6 +31,18 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Fetch static routes
+    const fetchRoutes = async () => {
+      try {
+        const data = await getAllRoutes();
+        setRoutes(data);
+        log(`Loaded ${data.length} routes`);
+      } catch (err) {
+        log("Error loading routes");
+      }
+    };
+    fetchRoutes();
+
     connectSocket(
       (data) => {
         log(`GOT UPDATE: Bus ${data.busId} @ ${data.latitude}, ${data.longitude}`);
@@ -73,9 +77,10 @@ export default function Dashboard() {
       <div style={{ padding: "15px", background: "#1a1a1a", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: '0 2px 10px rgba(0,0,0,0.3)', zIndex: 1000 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: '1.2rem' }}>🚍 Bus Tracker Pro</h2>
-          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{busList.length} Buses Active</div>
+          <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{busList.length} Buses | {routes.length} Routes</div>
         </div>
-        <div style={{ display: 'flex', gap: '15px' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+           <Link to="/manage" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem', marginRight: '15px', padding: '5px 10px', border: '1px solid #444', borderRadius: '4px' }}>⚙️ Manage Fleet</Link>
            <label style={{ fontSize: '0.9rem', background: autoCenter ? '#27ae60' : '#7f8c8d', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
             <input type="checkbox" checked={autoCenter} onChange={() => setAutoCenter(!autoCenter)} /> Auto-Follow
            </label>
@@ -95,12 +100,37 @@ export default function Dashboard() {
           />
           <MapUpdater center={mapCenter} autoCenter={autoCenter} />
 
+          {/* Render Routes */}
+          {routes.map(route => (
+            <React.Fragment key={route._id}>
+              <Polyline 
+                positions={route.path.map(p => [p.latitude, p.longitude])} 
+                color="#3498db" 
+                weight={5} 
+                opacity={0.6}
+              />
+              {route.stops.map((stop, idx) => (
+                <CircleMarker 
+                  key={idx} 
+                  center={[stop.latitude, stop.longitude]} 
+                  radius={6} 
+                  color="#2c3e50" 
+                  fillColor="#ecf0f1" 
+                  fillOpacity={1}
+                >
+                  <Popup><b>Stop:</b> {stop.name}</Popup>
+                </CircleMarker>
+              ))}
+            </React.Fragment>
+          ))}
+
+          {/* Render Buses */}
           {busList.map((bus) => (
             <Marker key={bus.busId} position={[bus.latitude, bus.longitude]} icon={BusIcon}>
               <Popup>
                 <div style={{ fontWeight: 'bold' }}>Bus {bus.busId}</div>
                 <div>Speed: {(bus.speed * 3.6).toFixed(1)} km/h</div>
-                <div style={{ fontSize: '0.8rem' }}>{new Date(bus.timestamp).toLocaleTimeString()}</div>
+                <div style={{ fontSize: '0.8rem' }}>{new Date(bus.lastUpdated).toLocaleTimeString()}</div>
               </Popup>
             </Marker>
           ))}
@@ -129,4 +159,15 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+// Forces map update when location changes
+function MapUpdater({ center, autoCenter }) {
+  const map = useMap();
+  useEffect(() => {
+    if (autoCenter && center && center[0] !== 0) {
+      map.flyTo(center, map.getZoom(), { animate: true, duration: 1 });
+    }
+  }, [center, autoCenter, map]);
+  return null;
 }
