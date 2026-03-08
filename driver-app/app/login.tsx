@@ -63,6 +63,13 @@ export default function LoginScreen() {
           <ThemedText style={styles.buttonText}>Login</ThemedText>
         )}
       </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={styles.passengerButton} 
+        onPress={() => router.push("/passenger")}
+      >
+        <ThemedText style={styles.passengerButtonText}>Continue as Passenger</ThemedText>
+      </TouchableOpacity>
     </ThemedView>
   );
 }
@@ -98,5 +105,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  passengerButton: {
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#3498db",
+  },
+  passengerButtonText: {
+    color: "#3498db",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
