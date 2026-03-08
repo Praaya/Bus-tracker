@@ -26,6 +26,30 @@ const io = new Server(server, {
   },
 });
 
+// Socket.io Middleware for Authentication
+const jwt = require("jsonwebtoken");
+const Driver = require("./model/driver");
+
+io.use(async (socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    // If no token, we still allow connection (for dashboard)
+    // but we can mark the socket as unauthenticated
+    socket.authenticated = false;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.driver = await Driver.findById(decoded.id).select("-password");
+    socket.authenticated = true;
+    next();
+  } catch (err) {
+    console.error("Socket Auth Error:", err.message);
+    next(new Error("Authentication error"));
+  }
+});
+
 // Inject Socket.io into request
 app.use((req, res, next) => {
   req.io = io;
@@ -37,7 +61,7 @@ app.use("/api/auth", require("./routes/authroutes"));
 app.use("/api/driver", require("./routes/driverroutes"));
 
 io.on("connection", (socket) => {
-  console.log("New Connection:", socket.id);
+  console.log("New Connection:", socket.id, socket.authenticated ? `(Driver: ${socket.driver.name})` : "(Public/Dashboard)");
 
   // Send currently known locations from DB to any new dashboard
   const fetchAllLocations = async () => {
@@ -51,8 +75,13 @@ io.on("connection", (socket) => {
   fetchAllLocations();
 
   socket.on("update-location", async (data) => {
-    const busId = data.busId || data.bus_id;
-    if (!busId) return;
+    // Only authenticated drivers can emit updates via sockets
+    if (!socket.authenticated || !socket.driver) {
+      console.log("Unauthorized update-location attempt from:", socket.id);
+      return;
+    }
+
+    const busId = socket.driver.busId; // Use the ID from the TOKEN, not the payload!
 
     const normalizedData = {
       busId: busId,
@@ -62,7 +91,7 @@ io.on("connection", (socket) => {
       lastUpdated: Date.now()
     };
 
-    console.log(`[Driver -> Server] Bus ${busId} at ${data.latitude}, ${data.longitude}`);
+    console.log(`[Driver -> Server] Bus ${busId} (Driver: ${socket.driver.name}) at ${data.latitude}, ${data.longitude}`);
     
     try {
       // Update or Create Bus record in MongoDB
@@ -74,7 +103,6 @@ io.on("connection", (socket) => {
 
       // BROADCAST to everyone
       io.emit("location-update", updatedBus);
-      console.log(`[Server -> Dashboards] Broadcasted update for ${busId}`);
     } catch (error) {
       console.error("Error updating location in DB:", error);
     }

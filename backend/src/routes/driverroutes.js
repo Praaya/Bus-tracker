@@ -1,11 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const { getAllBuses, updateLocation } = require("../controllers/drivercontroller");
+const { getAllBuses, updateLocation, getAllRoutes, createRoute } = require("../controllers/drivercontroller");
+const { protect } = require("../middleware/authmiddleware");
 
-// @route   GET /api/driver/buses
+// Public routes
 router.get("/buses", getAllBuses);
+router.get("/routes", getAllRoutes);
 
-// @route   POST /api/driver/location
-router.post("/location", updateLocation);
+// Protected routes (Only logged-in drivers)
+router.post("/location", protect, updateLocation);
+
+// Admin only (You can add admin middleware later)
+router.post("/routes", createRoute);
+router.put("/buses/:id", updateBus);
+router.delete("/buses/:id", deleteBus);
 
 module.exports = router;
