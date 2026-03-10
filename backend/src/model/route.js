@@ -7,22 +7,19 @@ const routeSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
-    routeId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
+    // The full path of the bus (for drawing lines on the map)
     path: [
       {
-        latitude: { type: Number, required: true },
-        longitude: { type: Number, required: true },
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true },
       },
     ],
+    // Specific bus stops along the route
     stops: [
       {
-        name: { type: String, required: true },
-        latitude: { type: Number, required: true },
-        longitude: { type: Number, required: true },
+        stopName: { type: String, required: true },
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true },
       },
     ],
   },

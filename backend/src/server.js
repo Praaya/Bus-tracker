@@ -114,6 +114,24 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+const os = require("os");
+
+const getLocalIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return "0.0.0.0";
+};
+
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`SERVER RUNNING ON PORT ${PORT}`);
+  const localIP = getLocalIP();
+  console.log(`🚀 SERVER RUNNING ON:`);
+  console.log(`   Local:   http://localhost:${PORT}`);
+  console.log(`   Network: http://${localIP}:${PORT}`);
+  console.log(`   Railway: ${process.env.RAILWAY_STATIC_URL || "N/A"}`);
 });

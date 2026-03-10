@@ -7,6 +7,10 @@ const busSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
+    routeName: {
+      type: String,
+      default: "General Route",
+    },
     latitude: {
       type: Number,
       required: true,

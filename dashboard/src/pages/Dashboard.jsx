@@ -21,6 +21,7 @@ const BusIcon = L.divIcon({
 export default function Dashboard() {
   const [buses, setBuses] = useState({});
   const [routes, setRoutes] = useState([]);
+  const [userLocation, setUserLocation] = useState(null); // Passenger location
   const [mapCenter, setMapCenter] = useState([26.152, 91.885]);
   const [autoCenter, setAutoCenter] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +31,26 @@ export default function Dashboard() {
     setDebugLog(prev => [msg, ...prev].slice(0, 5));
     console.log("[DASHBOARD]", msg);
   };
+
+  // Get Passenger's Location
+  useEffect(() => {
+    if (!("geolocation" in navigator)) {
+      log("Geolocation not supported");
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation([latitude, longitude]);
+        log(`User Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+      },
+      (err) => log(`Location Error: ${err.message}`),
+      { enableHighAccuracy: true }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
   useEffect(() => {
     // Fetch static routes
@@ -100,6 +121,12 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+           <button 
+             onClick={() => userLocation && setMapCenter(userLocation)} 
+             style={{ background: '#3498db', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.9rem' }}
+           >
+             📍 Locate Me
+           </button>
            <Link to="/manage" style={{ color: 'white', textDecoration: 'none', fontSize: '0.9rem', marginRight: '15px', padding: '5px 10px', border: '1px solid #444', borderRadius: '4px' }}>⚙️ Manage Fleet</Link>
            <label style={{ fontSize: '0.9rem', background: autoCenter ? '#27ae60' : '#7f8c8d', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
             <input type="checkbox" checked={autoCenter} onChange={() => setAutoCenter(!autoCenter)} /> Auto-Follow
@@ -119,6 +146,30 @@ export default function Dashboard() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapUpdater center={mapCenter} autoCenter={autoCenter} />
+
+          {/* Passenger/User Location */}
+          {userLocation && (
+            <>
+              <CircleMarker 
+                center={userLocation} 
+                radius={8} 
+                color="#2980b9" 
+                fillColor="#3498db" 
+                fillOpacity={1} 
+                weight={2}
+              >
+                <Popup>You are here</Popup>
+              </CircleMarker>
+              <CircleMarker 
+                center={userLocation} 
+                radius={30} 
+                color="#3498db" 
+                fillColor="#3498db" 
+                fillOpacity={0.1} 
+                weight={1}
+              />
+            </>
+          )}
 
           {/* Render Routes */}
           {filteredRoutes.map(route => (
