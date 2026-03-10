@@ -9,9 +9,15 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "../../src/context/AuthContext";
 
+interface LocationCoords {
+  latitude: number;
+  longitude: number;
+  speed: number | null;
+}
+
 export default function DriverHomeScreen() {
   const { user, logout } = useAuth();
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState<LocationCoords | null>(null);
   const [tracking, setTracking] = useState(false);
 
   const busId = user?.busId || "Unknown";
@@ -20,18 +26,18 @@ export default function DriverHomeScreen() {
     setTracking(true);
     connectSocket();
 
-    await startLocationTracking((coords) => {
+    await startLocationTracking((coords: LocationCoords) => {
       setLocation(coords);
 
       const payload = {
-        busId,
+        busId, // explicitly send busId
         latitude: coords.latitude,
         longitude: coords.longitude,
         speed: coords.speed || 0,
         timestamp: Date.now(),
       };
 
-      console.log("Emitting location:", payload);
+      console.log("Emitting location for:", busId, payload);
       sendLocation(payload);
     });
   };
