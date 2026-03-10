@@ -12,8 +12,8 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.praaya.bustracker",
-      "versionCode": 2,
+      "package": "com.praaya.bustrackernew",
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -51,6 +51,12 @@
       "eas": {
         "projectId": "5325b807-f06d-472e-be17-ac6ac8bd14ce"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5325b807-f06d-472e-be17-ac6ac8bd14ce"
     }
   }
 }
