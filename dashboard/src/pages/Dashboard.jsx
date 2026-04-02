@@ -43,10 +43,18 @@ export default function Dashboard() {
       (pos) => {
         const { latitude, longitude } = pos.coords;
         setUserLocation([latitude, longitude]);
+        // Only auto-center on the USER if there are NO active buses
+        if (autoCenter && Object.keys(buses).length === 0) {
+          setMapCenter([latitude, longitude]);
+        }
         log(`User Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
       },
       (err) => log(`Location Error: ${err.message}`),
-      { enableHighAccuracy: true }
+      { 
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0 
+      }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
@@ -72,7 +80,10 @@ export default function Dashboard() {
           ...prev,
           [data.busId]: data,
         }));
-        setMapCenter([data.latitude, data.longitude]);
+        // Update map center to the newest location if autoCenter is ON
+        if (autoCenter) {
+          setMapCenter([data.latitude, data.longitude]);
+        }
       },
       (initialLocations) => {
         log(`SYNC: Received ${initialLocations.length} existing buses`);
